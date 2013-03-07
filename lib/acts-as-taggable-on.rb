@@ -1,6 +1,7 @@
 require "active_record"
 require "active_record/version"
 require "action_view"
+require 'active_support/core_ext' unless Module.respond_to?(:mattr_accessor)
 
 require "digest/sha1"
 
