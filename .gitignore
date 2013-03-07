@@ -1,3 +1,5 @@
+.idea/
+*.sublime-*
 *.log
 *.sqlite3
 /pkg/*
