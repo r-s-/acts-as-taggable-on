@@ -1,14 +1,7 @@
 module ActsAsTaggableOn
   class Tagging < ::ActiveRecord::Base #:nodoc:
-    attr_accessible :tag,
-                    :tag_id,
-                    :context,
-                    :taggable,
-                    :taggable_type,
-                    :taggable_id,
-                    :tagger,
-                    :tagger_type,
-                    :tagger_id
+
+    #TODO: protect Tagging from mass assignement again
 
     belongs_to :tag, :class_name => 'ActsAsTaggableOn::Tag'
     belongs_to :taggable, :polymorphic => true

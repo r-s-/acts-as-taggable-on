@@ -193,12 +193,12 @@ describe ActsAsTaggableOn::Tag do
         duplicate_tag.stub(:validates_name_uniqueness?).and_return(false)
         duplicate_tag.save
         duplicate_tag.should be_persisted
-      end  
+      end
     end
 
     context "when do need unique names" do
       it "should run uniqueness validation" do
-        duplicate_tag.should_not be_valid        
+        duplicate_tag.should_not be_valid
       end
 
       it "add error to name" do
@@ -209,4 +209,16 @@ describe ActsAsTaggableOn::Tag do
       end
     end
   end
+
+  describe "only whitelisted attributes are writable" do
+    context "when creating a new Tag" do
+      it "Tag#name is writable" do
+        @tag = ActsAsTaggableOn::Tag.create(:name => 'ror')
+        @tag.save!
+        @tag.name.should == 'ror'
+      end
+    end
+  end
+
+
 end

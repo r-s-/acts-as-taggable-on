@@ -8,7 +8,7 @@ describe "Acts As Taggable On" do
   it "should provide a class method 'taggable?' that is false for untaggable models" do
     UntaggableModel.should_not be_taggable
   end
-  
+
   describe "Taggable Method Generation To Preserve Order" do
     before(:each) do
       clean_database!
@@ -46,7 +46,7 @@ describe "Acts As Taggable On" do
     it "should have all tag types" do
       @taggable.tag_types.should == [:tags, :languages, :skills, :needs, :offerings]
     end
-    
+
     it "should create a class attribute for preserve tag order" do
       @taggable.class.should respond_to(:preserve_tag_order?)
     end
@@ -54,7 +54,7 @@ describe "Acts As Taggable On" do
     it "should create an instance attribute for preserve tag order" do
       @taggable.should respond_to(:preserve_tag_order?)
     end
-    
+
     it "should respond 'false' to preserve_tag_order?" do
       @taggable.class.preserve_tag_order?.should be_false
     end

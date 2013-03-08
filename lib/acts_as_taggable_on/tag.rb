@@ -2,7 +2,7 @@ module ActsAsTaggableOn
   class Tag < ::ActiveRecord::Base
     include ActsAsTaggableOn::Utils
 
-    attr_accessible :name
+    #TODO: protect Tag from mass assignement again
 
     ### ASSOCIATIONS:
 
@@ -60,7 +60,7 @@ module ActsAsTaggableOn
 
       return [] if list.empty?
 
-      existing_tags = Tag.named_any(list).all
+      existing_tags = Tag.named_any(list).to_a
       new_tag_names = list.reject do |name|
         name = comparable_name(name)
         existing_tags.any? { |tag| comparable_name(tag.name) == name }

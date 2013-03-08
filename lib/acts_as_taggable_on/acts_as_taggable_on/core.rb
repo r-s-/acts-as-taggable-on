@@ -20,21 +20,19 @@ module ActsAsTaggableOn::Taggable
           context_taggings = "#{tag_type}_taggings".to_sym
           context_tags     = tags_type.to_sym
           taggings_order   = (preserve_tag_order? ? "#{ActsAsTaggableOn::Tagging.table_name}.id" : nil)
-          
+
           class_eval do
             # when preserving tag order, include order option so that for a 'tags' context
             # the associations tag_taggings & tags are always returned in created order
-            has_many context_taggings, :as => :taggable,
+            has_many context_taggings, -> { where("#{ActsAsTaggableOn::Tagging.table_name}.context = ?", tags_type).order taggings_order}, :as => :taggable,
                                        :dependent => :destroy,
                                        :include => :tag,
-                                       :class_name => "ActsAsTaggableOn::Tagging",
-                                       :conditions => ["#{ActsAsTaggableOn::Tagging.table_name}.context = ?", tags_type],
-                                       :order => taggings_order
-                                       
-            has_many context_tags, :through => context_taggings,
+                                       :class_name => "ActsAsTaggableOn::Tagging"
+
+
+            has_many context_tags, -> { order taggings_order}, :through => context_taggings,
                                    :source => :tag,
-                                   :class_name => "ActsAsTaggableOn::Tag",
-                                   :order => taggings_order
+                                   :class_name => "ActsAsTaggableOn::Tag"
           end
 
           taggable_mixin.class_eval <<-RUBY, __FILE__, __LINE__ + 1
@@ -57,7 +55,7 @@ module ActsAsTaggableOn::Taggable
         super(preserve_tag_order, *tag_types)
         initialize_acts_as_taggable_on_core
       end
-      
+
       # all column names are necessary for PostgreSQL group clause
       def grouped_column_names_for(object)
         object.column_names.map { |column| "#{object.table_name}.#{column}" }.join(", ")
@@ -81,7 +79,7 @@ module ActsAsTaggableOn::Taggable
       #   User.tagged_with("awesome", "cool", :owned_by => foo ) # Users that are tagged with just awesome and cool by 'foo'
       def tagged_with(tags, options = {})
         tag_list = ActsAsTaggableOn::TagList.from(tags)
-        empty_result = scoped(:conditions => "1 = 0")
+        empty_result = where("1 = 0")
 
         return empty_result if tag_list.empty?
 
@@ -171,13 +169,23 @@ module ActsAsTaggableOn::Taggable
           having = "COUNT(#{taggings_alias}.taggable_id) = #{tags.size}"
         end
 
-        scoped(:select     => select_clause,
-               :joins      => joins.join(" "),
-               :group      => group,
-               :having     => having,
-               :conditions => conditions.join(" AND "),
-               :order      => options[:order],
-               :readonly   => false)
+        #all(:select     => select_clause,
+        #       :joins      => joins.join(" "),
+        #       :group      => group,
+        #       :having     => having,
+        #       :conditions => conditions.join(" AND "),
+        #       :order      => options[:order],
+        #       :readonly   => false)
+
+        scopes =  []
+        scopes << [:select, select_clause] if select_clause.present? #select(select_clause)
+        scopes << [:joins, joins.join(" ")] if joins.present? #joins(joins.join(" "))
+        scopes << [:group, group] if group.present? #group(group)
+        scopes << [:having, having] if having.present? #having(having)
+        scopes << [:where, conditions.join(" AND ")] if conditions.present? #where(conditions.join(" AND "))
+        scopes << [:order, options[:order]] if options[:order].present? #order(options[:order])
+        scopes << [:readonly, false] #readonly(false)
+        scopes.inject(self) { |obj, method_and_args| obj.send(*method_and_args) }
       end
 
       def is_taggable?
@@ -257,17 +265,17 @@ module ActsAsTaggableOn::Taggable
           scope = scope.group("#{ActsAsTaggableOn::Tag.table_name}.#{ActsAsTaggableOn::Tag.primary_key}")
         end
 
-        scope.all
+        scope
       end
 
-      ##
+      ##end
       # Returns all tags that are not owned of a given context
       def tags_on(context)
         scope = base_tags.where(["#{ActsAsTaggableOn::Tagging.table_name}.context = ? AND #{ActsAsTaggableOn::Tagging.table_name}.tagger_id IS NULL", context.to_s])
         # when preserving tag order, return tags in created order
         # if we added the order to the association this would always apply
         scope = scope.order("#{ActsAsTaggableOn::Tagging.table_name}.id") if self.class.preserve_tag_order?
-        scope.all
+        scope
       end
 
       def set_tag_list_on(context, new_list)
@@ -337,7 +345,7 @@ module ActsAsTaggableOn::Taggable
           # Find taggings to remove:
           if old_tags.present?
             old_taggings = taggings.where(:tagger_type => nil, :tagger_id => nil,
-                                          :context => context.to_s, :tag_id => old_tags).all
+                                          :context => context.to_s, :tag_id => old_tags).to_a
           end
 
           # Destroy old taggings:
