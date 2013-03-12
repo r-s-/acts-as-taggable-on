@@ -5,7 +5,7 @@ require 'generators/acts_as_taggable_on/migration/migration_generator'
 
 describe ActsAsTaggableOn::MigrationGenerator do
   # Tell the generator where to put its output (what it thinks of as Rails.root)
-  #destination File.expand_path("../../../../../tmp", __FILE__)
+  destination File.expand_path("../../../../../tmp", __FILE__)
 
   before do
     prepare_destination

@@ -21,13 +21,6 @@ describe "Taggable To Preserve Order" do
     end
   end
 
-  it "should have tag associations ordered by id" do
-    [:tags, :colours].each do |type|
-      OrderedTaggableModel.reflect_on_association(type).options[:order].should include('id')
-      OrderedTaggableModel.reflect_on_association("#{type.to_s.singularize}_taggings".to_sym).options[:order].should include('id')
-    end
-  end
-
   it "should have tag methods" do
     [:tags, :colours].each do |type|
       @taggable.respond_to?("#{type.to_s.singularize}_list").should be_true
@@ -231,8 +224,8 @@ describe "Taggable" do
     bob = TaggableModel.create(:name => "Bob", :tag_list => "ruby")
     frank = TaggableModel.create(:name => "Frank", :tag_list => "Ruby")
 
-    ActsAsTaggableOn::Tag.find_all.size.should == 1
-    TaggableModel.tagged_with("ruby").should == TaggableModel.tagged_with("Ruby")
+    ActsAsTaggableOn::Tag.count.should == 1
+    TaggableModel.tagged_with("ruby").to_a.should == TaggableModel.tagged_with("Ruby").to_a
   end
 
   it "should be able to get tag counts on model as a whole" do
